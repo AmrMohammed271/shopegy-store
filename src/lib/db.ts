@@ -21,28 +21,33 @@ async function ensurePgInit() {
   } catch {
     // tables don't exist — create them
   }
+  // Drop old tables if they have wrong column casing, then recreate
+  await pool.query("DROP TABLE IF EXISTS orders");
+  await pool.query("DROP TABLE IF EXISTS products");
+  await pool.query("DROP TABLE IF EXISTS categories");
+  await pool.query("DROP TABLE IF EXISTS admin_users");
   const schema = `
-    CREATE TABLE IF NOT EXISTS categories (
+    CREATE TABLE categories (
       id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, image TEXT
     );
-    CREATE TABLE IF NOT EXISTS products (
+    CREATE TABLE products (
       id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL,
       description TEXT DEFAULT '', price REAL NOT NULL,
       images TEXT DEFAULT '["/placeholder.svg"]', stock INTEGER DEFAULT 0,
-      "categoryId" TEXT, featured INTEGER DEFAULT 0, rating REAL DEFAULT 0,
-      "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW(),
-      FOREIGN KEY ("categoryId") REFERENCES categories(id)
+      categoryid TEXT, featured INTEGER DEFAULT 0, rating REAL DEFAULT 0,
+      createdat TIMESTAMP DEFAULT NOW(), updatedat TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (categoryid) REFERENCES categories(id)
     );
-    CREATE TABLE IF NOT EXISTS orders (
+    CREATE TABLE orders (
       id TEXT PRIMARY KEY, items TEXT NOT NULL, total REAL NOT NULL,
-      subtotal REAL DEFAULT 0, "shippingCost" REAL DEFAULT 0,
-      governorate TEXT DEFAULT '', "shippingMethod" TEXT DEFAULT 'standard',
-      "paymentMethod" TEXT DEFAULT 'cod', status TEXT DEFAULT 'pending',
-      "customerName" TEXT NOT NULL, "customerEmail" TEXT DEFAULT '',
-      "customerPhone" TEXT NOT NULL, "customerAddress" TEXT NOT NULL,
-      "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW()
+      subtotal REAL DEFAULT 0, shippingcost REAL DEFAULT 0,
+      governorate TEXT DEFAULT '', shippingmethod TEXT DEFAULT 'standard',
+      paymentmethod TEXT DEFAULT 'cod', status TEXT DEFAULT 'pending',
+      customername TEXT NOT NULL, customeremail TEXT DEFAULT '',
+      customerphone TEXT NOT NULL, customeraddress TEXT NOT NULL,
+      createdat TIMESTAMP DEFAULT NOW(), updatedat TIMESTAMP DEFAULT NOW()
     );
-    CREATE TABLE IF NOT EXISTS admin_users (
+    CREATE TABLE admin_users (
       id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL
     );
     INSERT INTO admin_users (id, username, password) VALUES
@@ -54,7 +59,7 @@ async function ensurePgInit() {
       ('cat-5','أزياء','fashion',NULL),('cat-6','الصحة','health',NULL),
       ('cat-7','أطفال','kids',NULL),('cat-8','رياضة','sports',NULL)
       ON CONFLICT (id) DO NOTHING;
-    INSERT INTO products (id,name,slug,description,price,images,stock,"categoryId",featured,rating) VALUES
+    INSERT INTO products (id,name,slug,description,price,images,stock,categoryid,featured,rating) VALUES
       ('p-1','ساعة ذكية ابل واتش سيريس 9','apple-watch-series-9','ساعة ذكية من ابل - أحدث إصدار',24999,'["https://picsum.photos/seed/watch1/400/400"]',50,'cat-1',1,4.8),
       ('p-2','سماعات لاسلكية ابل ايربودز برو 2','airpods-pro-2','سماعات لاسلكية مع خاصية إلغاء الضوضاء',12499,'["https://picsum.photos/seed/airpods/400/400"]',100,'cat-1',1,4.7),
       ('p-3','موبايل سامسونج جالاكسي S24 الترا','samsung-s24-ultra','هاتف ذكي بشاشة 6.8 بوصة',51999,'["https://picsum.photos/seed/s24/400/400"]',30,'cat-1',1,4.9),
