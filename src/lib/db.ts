@@ -52,7 +52,7 @@ async function ensurePgInit() {
       id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL
     );
     INSERT INTO admin_users (id, username, password) VALUES
-      (gen_random_uuid()::text, 'admin', '$2a$10$W5qF5qF5qF5qF5qF5qF5qO5qF5qF5qF5qF5qF5qF5qF5qF5qF5q')
+      (gen_random_uuid()::text, 'admin', '$2b$10$dcTAx3v.wBNjHkMH8tJdk.yi56WUvqNUoXiWnpsdQAXbTm032ngHa')
       ON CONFLICT (username) DO NOTHING;
     INSERT INTO categories (id, name, slug, image) VALUES
       ('cat-1','إلكترونيات','electronics',NULL),('cat-2','سيارات ودراجات','automotive',NULL),
@@ -211,6 +211,38 @@ export async function updateOrderStatus(id: string, status: string): Promise<voi
   await run("UPDATE orders SET status=?, updatedAt=datetime('now') WHERE id=?", [status, id]);
 }
 
+let adminEnsured = false;
+
+async function ensureAdminUser() {
+  if (adminEnsured) return;
+  adminEnsured = true;
+  const hash = "$2b$10$dcTAx3v.wBNjHkMH8tJdk.yi56WUvqNUoXiWnpsdQAXbTm032ngHa";
+  if (isDev) {
+    try {
+      await run("CREATE TABLE IF NOT EXISTS admin_users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL)", []);
+    } catch {}
+    try {
+      const existing = await get("SELECT id FROM admin_users WHERE username = ?", ["admin"]);
+      if (!existing) {
+        const crypto = await import("crypto");
+        await run("INSERT INTO admin_users (id, username, password) VALUES (?, ?, ?)", [crypto.randomUUID(), "admin", hash]);
+      } else {
+        await run("UPDATE admin_users SET password = ? WHERE username = ?", [hash, "admin"]);
+      }
+    } catch {}
+  } else {
+    try {
+      const pool = await getPgPool();
+      await ensurePgInit();
+      await pool.query(
+        "INSERT INTO admin_users (id, username, password) VALUES (gen_random_uuid()::text, $1, $2) ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password",
+        ["admin", hash]
+      );
+    } catch {}
+  }
+}
+
 export async function getAdminUser(username: string): Promise<Row | null> {
+  await ensureAdminUser();
   return get("SELECT * FROM admin_users WHERE username = ?", [username]);
 }
