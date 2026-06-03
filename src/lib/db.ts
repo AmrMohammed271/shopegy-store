@@ -1,31 +1,5 @@
 type Row = Record<string, unknown>;
 
-async function sqliteQuery(sql: string, params: unknown[] = []): Promise<Row[]> {
-  const Database = (await import("better-sqlite3")).default;
-  const path = (await import("path")).default;
-  const db = new Database(path.join(process.cwd(), "prisma", "dev.db"));
-  db.pragma("journal_mode = WAL");
-  const stmt = db.prepare(sql);
-  return stmt.all(...params) as Row[];
-}
-
-async function sqliteGet(sql: string, params: unknown[] = []): Promise<Row | null> {
-  const Database = (await import("better-sqlite3")).default;
-  const path = (await import("path")).default;
-  const db = new Database(path.join(process.cwd(), "prisma", "dev.db"));
-  db.pragma("journal_mode = WAL");
-  const stmt = db.prepare(sql);
-  return (stmt.get(...params) as Row) || null;
-}
-
-async function sqliteRun(sql: string, params: unknown[] = []): Promise<void> {
-  const Database = (await import("better-sqlite3")).default;
-  const path = (await import("path")).default;
-  const db = new Database(path.join(process.cwd(), "prisma", "dev.db"));
-  db.pragma("journal_mode = WAL");
-  db.prepare(sql).run(...params);
-}
-
 let pgPool: any = null;
 async function getPgPool() {
   if (!pgPool) {
@@ -35,8 +9,79 @@ async function getPgPool() {
   return pgPool;
 }
 
+let pgInitialized = false;
+
+async function ensurePgInit() {
+  if (pgInitialized) return;
+  const pool = await getPgPool();
+  try {
+    await pool.query("SELECT 1 FROM categories LIMIT 1");
+    pgInitialized = true;
+    return;
+  } catch {
+    // tables don't exist — create them
+  }
+  const schema = `
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, image TEXT
+    );
+    CREATE TABLE IF NOT EXISTS products (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL,
+      description TEXT DEFAULT '', price REAL NOT NULL,
+      images TEXT DEFAULT '["/placeholder.svg"]', stock INTEGER DEFAULT 0,
+      "categoryId" TEXT, featured INTEGER DEFAULT 0, rating REAL DEFAULT 0,
+      "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY ("categoryId") REFERENCES categories(id)
+    );
+    CREATE TABLE IF NOT EXISTS orders (
+      id TEXT PRIMARY KEY, items TEXT NOT NULL, total REAL NOT NULL,
+      subtotal REAL DEFAULT 0, "shippingCost" REAL DEFAULT 0,
+      governorate TEXT DEFAULT '', "shippingMethod" TEXT DEFAULT 'standard',
+      "paymentMethod" TEXT DEFAULT 'cod', status TEXT DEFAULT 'pending',
+      "customerName" TEXT NOT NULL, "customerEmail" TEXT DEFAULT '',
+      "customerPhone" TEXT NOT NULL, "customerAddress" TEXT NOT NULL,
+      "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS admin_users (
+      id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL
+    );
+    INSERT INTO admin_users (id, username, password) VALUES
+      (gen_random_uuid()::text, 'admin', '$2a$10$W5qF5qF5qF5qF5qF5qF5qO5qF5qF5qF5qF5qF5qF5qF5qF5qF5q')
+      ON CONFLICT (username) DO NOTHING;
+    INSERT INTO categories (id, name, slug, image) VALUES
+      ('cat-1','إلكترونيات','electronics',NULL),('cat-2','سيارات ودراجات','automotive',NULL),
+      ('cat-3','المنزل والمطبخ','home-kitchen',NULL),('cat-4','الجمال والعناية','beauty-care',NULL),
+      ('cat-5','أزياء','fashion',NULL),('cat-6','الصحة','health',NULL),
+      ('cat-7','أطفال','kids',NULL),('cat-8','رياضة','sports',NULL)
+      ON CONFLICT (id) DO NOTHING;
+    INSERT INTO products (id,name,slug,description,price,images,stock,"categoryId",featured,rating) VALUES
+      ('p-1','ساعة ذكية ابل واتش سيريس 9','apple-watch-series-9','ساعة ذكية من ابل - أحدث إصدار',24999,'["https://picsum.photos/seed/watch1/400/400"]',50,'cat-1',1,4.8),
+      ('p-2','سماعات لاسلكية ابل ايربودز برو 2','airpods-pro-2','سماعات لاسلكية مع خاصية إلغاء الضوضاء',12499,'["https://picsum.photos/seed/airpods/400/400"]',100,'cat-1',1,4.7),
+      ('p-3','موبايل سامسونج جالاكسي S24 الترا','samsung-s24-ultra','هاتف ذكي بشاشة 6.8 بوصة',51999,'["https://picsum.photos/seed/s24/400/400"]',30,'cat-1',1,4.9),
+      ('p-4','لابتوب لينوفو ثينك باد X1 كاربون','lenovo-x1-carbon','لابتوب خفيف الوزن للأعمال',69999,'["https://picsum.photos/seed/laptop/400/400"]',20,'cat-1',0,4.6),
+      ('p-5','تابلت سامسونج جالاكسي Tab S9','samsung-tab-s9','جهاز لوحي بشاشة 11 بوصة',32999,'["https://picsum.photos/seed/tablet/400/400"]',25,'cat-1',0,4.5),
+      ('p-6','كاميرا كانون EOS R50','canon-eos-r50','كاميرا بدون مرآة بدقة 24.2 ميجابكسل',45999,'["https://picsum.photos/seed/camera/400/400"]',15,'cat-1',1,4.7),
+      ('p-7','شاحن متنقل انكر 20000mAh','anker-powerbank-20000','بطارية خارجية سريعة الشحن',1499,'["https://picsum.photos/seed/powerbank/400/400"]',200,'cat-1',0,4.4),
+      ('p-8','سماعة رأس لاسلكية سوني WH-1000XM5','sony-wh-1000xm5','سماعة عازلة للضوضاء',12999,'["https://picsum.photos/seed/headphones/400/400"]',40,'cat-1',0,4.8),
+      ('p-9','مسجل فيديو للسيارة','car-dashcam','كاميرا سيارة دقيقة 4K',2499,'["https://picsum.photos/seed/dashcam/400/400"]',150,'cat-2',0,4.3),
+      ('p-10','زيت محرك شل هيليكس 5W-30','shell-helix-5w30','زيت محرك تخليقي بالكامل',899,'["https://picsum.photos/seed/oil/400/400"]',300,'cat-2',0,4.5),
+      ('p-13','دراجة هوائية جينيس','genesis-bicycle','دراجة هوائية رياضية',8999,'["https://picsum.photos/seed/bike/400/400"]',30,'cat-2',1,4.2),
+      ('p-14','مكنسة روبوت رومبا','roomba-robot','مكنسة كهربائية روبوت ذكية',15999,'["https://picsum.photos/seed/roomba/400/400"]',20,'cat-3',1,4.6),
+      ('p-17','طقم قدور جرانيت','granite-pots-set','طقم قدور جرانيت 12 قطعة',3599,'["https://picsum.photos/seed/pots/400/400"]',60,'cat-3',1,4.7),
+      ('p-20','عطر ديور سوفاج','dior-sauvage','عطر رجالي عالمي',2999,'["https://picsum.photos/seed/perfume/400/400"]',100,'cat-4',1,4.8),
+      ('p-24','حذاء رياضي نايك','nike-sneakers','حذاء رياضي كلاسيك أبيض',4999,'["https://picsum.photos/seed/sneakers/400/400"]',80,'cat-5',1,4.6),
+      ('p-27','مكمل غذائي بروتين واي','whey-protein','بروتين مصل اللبن 2.27 كجم',2299,'["https://picsum.photos/seed/protein/400/400"]',100,'cat-6',1,4.7),
+      ('p-31','ألعاب تركيب ليغو','lego-building-set','لعبة تركيب أطفال 500 قطعة',1499,'["https://picsum.photos/seed/lego/400/400"]',100,'cat-7',1,4.8),
+      ('p-37','ترابيزة بلياردو','pool-table','طاولة بلياردو منزلية',12999,'["https://picsum.photos/seed/pool/400/400"]',10,'cat-8',1,4.7)
+      ON CONFLICT (id) DO NOTHING;
+  `;
+  await pool.query(schema);
+  pgInitialized = true;
+}
+
 async function pgQuery(sql: string, params: unknown[] = []): Promise<Row[]> {
   const pool = await getPgPool();
+  await ensurePgInit();
   const r = await pool.query(sql, params);
   return r.rows;
 }
@@ -48,7 +93,29 @@ async function pgGet(sql: string, params: unknown[] = []): Promise<Row | null> {
 
 async function pgRun(sql: string, params: unknown[] = []): Promise<void> {
   const pool = await getPgPool();
+  await ensurePgInit();
   await pool.query(sql, params);
+}
+
+// ====== SQLite functions (local dev) ======
+function getSqliteDb() {
+  const Database = require("better-sqlite3");
+  const path = require("path");
+  const db = new Database(path.join(process.cwd(), "prisma", "dev.db"));
+  db.pragma("journal_mode = WAL");
+  return db;
+}
+
+function sqliteQuery(sql: string, params: unknown[] = []): Row[] {
+  return getSqliteDb().prepare(sql).all(...params) as Row[];
+}
+
+function sqliteGet(sql: string, params: unknown[] = []): Row | null {
+  return (getSqliteDb().prepare(sql).get(...params) as Row) || null;
+}
+
+function sqliteRun(sql: string, params: unknown[] = []): void {
+  getSqliteDb().prepare(sql).run(...params);
 }
 
 const isDev = !process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith("file:");
