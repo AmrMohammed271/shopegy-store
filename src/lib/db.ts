@@ -97,25 +97,28 @@ async function pgRun(sql: string, params: unknown[] = []): Promise<void> {
   await pool.query(sql, params);
 }
 
-// ====== SQLite functions (local dev) ======
-function getSqliteDb() {
-  const Database = require("better-sqlite3");
-  const path = require("path");
+// ====== SQLite functions (local dev) — lazy imports ======
+async function getSqliteDb() {
+  const { default: Database } = await import("better-sqlite3");
+  const path = await import("path");
   const db = new Database(path.join(process.cwd(), "prisma", "dev.db"));
   db.pragma("journal_mode = WAL");
   return db;
 }
 
-function sqliteQuery(sql: string, params: unknown[] = []): Row[] {
-  return getSqliteDb().prepare(sql).all(...params) as Row[];
+async function sqliteQuery(sql: string, params: unknown[] = []): Promise<Row[]> {
+  const db = await getSqliteDb();
+  return db.prepare(sql).all(...params) as Row[];
 }
 
-function sqliteGet(sql: string, params: unknown[] = []): Row | null {
-  return (getSqliteDb().prepare(sql).get(...params) as Row) || null;
+async function sqliteGet(sql: string, params: unknown[] = []): Promise<Row | null> {
+  const db = await getSqliteDb();
+  return (db.prepare(sql).get(...params) as Row) || null;
 }
 
-function sqliteRun(sql: string, params: unknown[] = []): void {
-  getSqliteDb().prepare(sql).run(...params);
+async function sqliteRun(sql: string, params: unknown[] = []): Promise<void> {
+  const db = await getSqliteDb();
+  db.prepare(sql).run(...params);
 }
 
 const isDev = !process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith("file:");
