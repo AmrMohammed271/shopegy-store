@@ -3,13 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import shippingData from "@/lib/shipping";
+import { formatPrice } from "@/lib/utils";
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
+interface CartItem { id: string; name: string; price: number; quantity: number; }
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -39,17 +35,9 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: cart,
-          subtotal,
-          shippingCost,
-          total,
-          governorate: form.governorate,
-          shippingMethod: form.shippingMethod,
-          paymentMethod: form.paymentMethod,
-          customerName: form.name,
-          customerEmail: form.email,
-          customerPhone: form.phone,
-          customerAddress: form.address,
+          items: cart, subtotal, shippingCost, total,
+          governorate: form.governorate, shippingMethod: form.shippingMethod, paymentMethod: form.paymentMethod,
+          customerName: form.name, customerEmail: form.email, customerPhone: form.phone, customerAddress: form.address,
         }),
       });
       const data = await res.json();
@@ -65,16 +53,16 @@ export default function CheckoutPage() {
 
   if (done) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-16 text-center">
-        <div className="text-6xl mb-4">✅</div>
-        <h1 className="text-2xl font-bold mb-2">تم تقديم الطلب بنجاح!</h1>
-        <p className="text-gray-500 mb-2">رقم الطلب: #{orderId.slice(-8)}</p>
-        <p className="text-gray-500 mb-6">
+      <div className="max-w-lg mx-auto px-4 py-20 text-center">
+        <div className="text-7xl mb-6">✅</div>
+        <h1 className="text-2xl font-bold text-white mb-2">تم تقديم الطلب بنجاح!</h1>
+        <p className="text-gray-400 mb-2">رقم الطلب: <span className="text-purple-400 font-bold">#{orderId.slice(-8)}</span></p>
+        <p className="text-gray-500 mb-8 text-sm">
           {form.paymentMethod === "fawry"
-            ? "هتصلك رسالة على واتساب برقم فوري للدفع. هاتوصلك خلال 3-5 أيام."
-            : "هنتواصل معاك لتأكيد الطلب والتوصيل. هاتوصلك خلال 3-5 أيام."}
+            ? "هتصلك رسالة تفاصيل الدفع عبر فوري. الطلب هاتوصله خلال 3-5 أيام."
+            : "هنتواصل معاك لتأكيد الطلب. الطلب هاتوصله خلال 3-5 أيام."}
         </p>
-        <button onClick={() => router.push("/")} className="bg-[#febd69] text-black px-6 py-3 rounded-lg font-bold">
+        <button onClick={() => router.push("/")} className="gradient-bg text-white px-8 py-3.5 rounded-xl font-bold hover:opacity-90 transition-all">
           العودة للرئيسية
         </button>
       </div>
@@ -82,119 +70,101 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">إتمام الشراء</h1>
+    <div className="max-w-5xl mx-auto px-4 py-6">
+      <h1 className="text-2xl md:text-3xl font-bold text-white mb-8">إتمام الشراء</h1>
       <form onSubmit={submitOrder} className="grid md:grid-cols-5 gap-6">
         <div className="md:col-span-3 space-y-4">
-          <div className="bg-white rounded-lg p-6 border">
-            <h2 className="font-bold text-lg mb-4">📍 عنوان التوصيل</h2>
+          <div className="glass rounded-xl p-6">
+            <h2 className="font-bold text-lg text-white mb-4">📍 عنوان التوصيل</h2>
             <div className="space-y-3">
               <input required placeholder="الاسم الكامل" value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2" />
-
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
               <div className="grid grid-cols-2 gap-3">
                 <input required type="tel" placeholder="رقم الهاتف" value={form.phone}
                   onChange={e => setForm({ ...form, phone: e.target.value })}
-                  className="border rounded-lg px-3 py-2" />
+                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
                 <input type="email" placeholder="البريد الإلكتروني (اختياري)" value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
-                  className="border rounded-lg px-3 py-2" />
+                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
               </div>
-
               <select required value={form.governorate}
                 onChange={e => setForm({ ...form, governorate: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2">
-                <option value="">اختر المحافظة</option>
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                <option value="" className="bg-gray-900">اختر المحافظة</option>
                 {shippingData.map(g => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
+                  <option key={g.id} value={g.id} className="bg-gray-900">{g.name}</option>
                 ))}
               </select>
-
               <textarea required placeholder="العنوان بالتفصيل (الشارع، المنطقة، رقم المبنى)" value={form.address}
                 onChange={e => setForm({ ...form, address: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2 h-20" />
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 h-20" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border">
-            <h2 className="font-bold text-lg mb-4">🚚 طريقة الشحن</h2>
+          <div className="glass rounded-xl p-6">
+            <h2 className="font-bold text-lg text-white mb-4">🚚 طريقة الشحن</h2>
             <div className="space-y-3">
-              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${form.shippingMethod === "standard" ? "border-[#febd69] bg-yellow-50" : "hover:bg-gray-50"}`}>
-                <input type="radio" name="shipping" value="standard" checked={form.shippingMethod === "standard"}
-                  onChange={e => setForm({ ...form, shippingMethod: e.target.value as "standard" })} />
-                <div className="flex-1">
-                  <p className="font-medium">شحن عادي</p>
-                  <p className="text-sm text-gray-500">التوصيل خلال 3-5 أيام عمل</p>
-                </div>
-                <span className="font-bold">{governorate ? `${governorate.standard} EGP` : "—"}</span>
-              </label>
-              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${form.shippingMethod === "express" ? "border-[#febd69] bg-yellow-50" : "hover:bg-gray-50"}`}>
-                <input type="radio" name="shipping" value="express" checked={form.shippingMethod === "express"}
-                  onChange={e => setForm({ ...form, shippingMethod: e.target.value as "express" })} />
-                <div className="flex-1">
-                  <p className="font-medium">شحن سريع</p>
-                  <p className="text-sm text-gray-500">التوصيل خلال 1-2 يوم عمل</p>
-                </div>
-                <span className="font-bold">{governorate ? `${governorate.express} EGP` : "—"}</span>
-              </label>
+              {(["standard", "express"] as const).map(m => (
+                <label key={m} className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all ${form.shippingMethod === m ? "gradient-border bg-white/5" : "bg-white/5 hover:bg-white/10 border border-white/5"}`}>
+                  <input type="radio" name="shipping" value={m} checked={form.shippingMethod === m}
+                    onChange={e => setForm({ ...form, shippingMethod: e.target.value as "standard" | "express" })} className="accent-purple-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-white">{m === "standard" ? "شحن عادي" : "شحن سريع"}</p>
+                    <p className="text-sm text-gray-500">{m === "standard" ? "التوصيل خلال 3-5 أيام عمل" : "التوصيل خلال 1-2 يوم عمل"}</p>
+                  </div>
+                  <span className="font-bold text-purple-400">{governorate ? formatPrice(m === "standard" ? governorate.standard : governorate.express) : "—"}</span>
+                </label>
+              ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border">
-            <h2 className="font-bold text-lg mb-4">💳 طريقة الدفع</h2>
+          <div className="glass rounded-xl p-6">
+            <h2 className="font-bold text-lg text-white mb-4">💳 طريقة الدفع</h2>
             <div className="space-y-3">
-              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${form.paymentMethod === "cod" ? "border-[#febd69] bg-yellow-50" : "hover:bg-gray-50"}`}>
-                <input type="radio" name="payment" value="cod" checked={form.paymentMethod === "cod"}
-                  onChange={e => setForm({ ...form, paymentMethod: e.target.value as "cod" })} />
-                <div>
-                  <p className="font-medium">💰 الدفع عند الاستلام</p>
-                  <p className="text-sm text-gray-500">ادفع كاش لما تستلم الطلب</p>
-                </div>
-              </label>
-              <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${form.paymentMethod === "fawry" ? "border-[#febd69] bg-yellow-50" : "hover:bg-gray-50"}`}>
-                <input type="radio" name="payment" value="fawry" checked={form.paymentMethod === "fawry"}
-                  onChange={e => setForm({ ...form, paymentMethod: e.target.value as "fawry" })} />
-                <div>
-                  <p className="font-medium">🏧 فوري (Fawry)</p>
-                  <p className="text-sm text-gray-500">ادفع عبر أي فرع فوري أو محفظة</p>
-                </div>
-              </label>
+              {([["cod", "💰 الدفع عند الاستلام", "ادفع كاش لما تستلم الطلب"], ["fawry", "🏧 فوري (Fawry)", "ادفع عبر أي فرع فوري أو محفظة"]] as const).map(([v, title, desc]) => (
+                <label key={v} className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all ${form.paymentMethod === v ? "gradient-border bg-white/5" : "bg-white/5 hover:bg-white/10 border border-white/5"}`}>
+                  <input type="radio" name="payment" value={v} checked={form.paymentMethod === v}
+                    onChange={e => setForm({ ...form, paymentMethod: e.target.value as "cod" | "fawry" })} className="accent-purple-500" />
+                  <div>
+                    <p className="font-medium text-white">{title}</p>
+                    <p className="text-sm text-gray-500">{desc}</p>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
         </div>
 
         <div className="md:col-span-2">
-          <div className="bg-white rounded-lg p-6 border sticky top-4">
-            <h2 className="font-bold text-lg mb-4">ملخص الطلب</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
+          <div className="glass rounded-xl p-6 sticky top-24">
+            <h2 className="font-bold text-lg text-white mb-4">ملخص الطلب</h2>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between text-gray-300">
                 <span>المنتجات ({cart.reduce((a, i) => a + i.quantity, 0)})</span>
-                <span>{subtotal.toFixed(2)} EGP</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-gray-300">
                 <span>الشحن</span>
-                <span>{shippingCost > 0 ? `${shippingCost.toFixed(2)} EGP` : "—"}</span>
+                <span>{shippingCost > 0 ? formatPrice(shippingCost) : <span className="text-green-400">مجاني</span>}</span>
               </div>
-              <hr />
-              <div className="flex justify-between font-bold text-lg">
-                <span>الإجمالي</span>
-                <span>{total.toFixed(2)} EGP</span>
+              <div className="border-t border-white/10 pt-3 flex justify-between font-bold text-lg">
+                <span className="text-white">الإجمالي</span>
+                <span className="gradient-text">{formatPrice(total)}</span>
               </div>
             </div>
 
-            <hr className="my-4" />
-            <div className="space-y-1 text-xs text-gray-500">
+            <div className="border-t border-white/10 my-4 pt-4 space-y-1 text-xs text-gray-500">
               {cart.map(item => (
                 <div key={item.id} className="flex justify-between">
                   <span className="truncate">{item.name} x{item.quantity}</span>
-                  <span>{(item.price * item.quantity).toFixed(2)} EGP</span>
+                  <span>{formatPrice(item.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
 
             <button type="submit" disabled={submitting}
-              className="w-full mt-4 bg-[#febd69] text-black py-3 rounded-lg font-bold text-lg hover:bg-[#f3a847] transition-colors disabled:bg-gray-300">
+              className="w-full mt-4 gradient-bg text-white py-3.5 rounded-xl font-bold text-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed animate-pulse-glow">
               {submitting ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
             </button>
           </div>

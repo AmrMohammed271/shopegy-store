@@ -3,98 +3,120 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import shippingData from "@/lib/shipping";
+import { formatPrice } from "@/lib/utils";
 
 interface Order {
-  id: string;
-  total: number;
-  subtotal: number;
-  shippingCost: number;
-  governorate: string;
-  shippingMethod: string;
-  paymentMethod: string;
-  status: string;
-  customerName: string;
-  items: string;
-  createdAt: string;
+  id: string; total: number; subtotal: number; shippingCost: number;
+  governorate: string; shippingMethod: string; paymentMethod: string;
+  status: string; customerName: string; customerPhone: string;
+  items: string; createdAt: string;
 }
 
-const governorateNames: Record<string, string> = {};
-shippingData.forEach(g => { governorateNames[g.id] = g.name; });
+const statusMap: Record<string, { label: string; color: string; step: number }> = {
+  pending: { label: "قيد الانتظار", color: "text-yellow-400", step: 1 },
+  confirmed: { label: "تم التأكيد", color: "text-blue-400", step: 2 },
+  shipped: { label: "تم الشحن", color: "text-purple-400", step: 3 },
+  delivered: { label: "تم التوصيل", color: "text-green-400", step: 4 },
+  cancelled: { label: "ملغي", color: "text-red-400", step: 0 },
+};
 
 export default function OrdersPage() {
   const [phone, setPhone] = useState("");
-  const [orders, setOrders] = useState<Order[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [searched, setSearched] = useState(false);
 
   const searchOrders = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/orders?phone=${encodeURIComponent(phone)}`);
-      setOrders(await res.json());
-    } finally { setLoading(false); }
-  };
-
-  const statusColors: Record<string, string> = {
-    pending: "text-yellow-600 bg-yellow-50", confirmed: "text-blue-600 bg-blue-50",
-    shipped: "text-purple-600 bg-purple-50", delivered: "text-green-600 bg-green-50",
-    cancelled: "text-red-600 bg-red-50",
-  };
-
-  const statusLabels: Record<string, string> = {
-    pending: "قيد الانتظار", confirmed: "تم التأكيد", shipped: "تم الشحن", delivered: "تم التوصيل", cancelled: "ملغي",
+    if (!phone.trim()) return;
+    const res = await fetch(`/api/orders?phone=${encodeURIComponent(phone.trim())}`);
+    const data = await res.json();
+    setOrders(data);
+    setSearched(true);
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">طلباتي</h1>
-      <form onSubmit={searchOrders} className="flex gap-2 mb-6">
-        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-          placeholder="ادخل رقم الهاتف للبحث عن طلباتك" className="flex-1 border rounded-lg px-4 py-3" required />
-        <button type="submit" disabled={loading}
-          className="bg-[#131921] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#232f3e] disabled:bg-gray-400">
-          {loading ? "...بحث" : "بحث"}
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">🔍 تتبع طلباتك</h1>
+
+      <form onSubmit={searchOrders} className="flex gap-2 mb-8">
+        <input
+          type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+          placeholder="أدخل رقم الهاتف"
+          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+        />
+        <button type="submit" className="gradient-bg text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all">
+          بحث
         </button>
       </form>
 
-      {orders && orders.length === 0 && <p className="text-center text-gray-500 py-8">لا توجد طلبات بهذا الرقم</p>}
-
-      {orders && orders.length > 0 && (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg p-4 border">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-sm text-gray-500">طلب #{order.id.slice(-8)}</p>
-                  <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString("ar-EG")}</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[order.status] || "bg-gray-100"}`}>
-                  {statusLabels[order.status] || order.status}
-                </span>
-              </div>
-
-              <div className="text-sm text-gray-700 mb-2">
-                {(() => { try { return JSON.parse(order.items).map((i: { name: string; quantity: number }) => `${i.name} x${i.quantity}`).join("، "); } catch { return order.items; } })()}
-              </div>
-
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-2">
-                <span>📍 {governorateNames[order.governorate] || order.governorate}</span>
-                <span>🚚 {order.shippingMethod === "express" ? "شحن سريع" : "شحن عادي"}</span>
-                <span>💳 {order.paymentMethod === "cod" ? "الدفع عند الاستلام" : "فوري"}</span>
-              </div>
-
-              <div className="flex justify-between items-center border-t pt-2">
-                <span className="text-xs text-gray-400">الشحن: {order.shippingCost?.toFixed(2) || "0.00"} EGP</span>
-                <p className="font-bold text-lg">{order.total.toFixed(2)} EGP</p>
-              </div>
-            </div>
-          ))}
+      {searched && orders.length === 0 && (
+        <div className="text-center py-12 glass rounded-xl">
+          <div className="text-5xl mb-4">📭</div>
+          <p className="text-gray-400">لا توجد طلبات بهذا الرقم</p>
         </div>
       )}
 
-      {!orders && <p className="text-center text-gray-400 py-8">أدخل رقم هاتفك لمشاهدة طلباتك السابقة</p>}
-      <div className="text-center mt-8"><Link href="/products" className="text-blue-600 hover:underline">تصفح المنتجات</Link></div>
+      {orders.length > 0 && (
+        <div className="space-y-4">
+          {orders.map(order => {
+            const st = statusMap[order.status] || statusMap.pending;
+            const gov = shippingData.find(g => g.id === order.governorate);
+            const items: { name: string; quantity: number; price: number }[] = (() => { try { return JSON.parse(order.items); } catch { return []; } })();
+
+            return (
+              <div key={order.id} className="glass rounded-xl p-6 card-hover">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div>
+                    <span className="text-gray-400 text-sm">رقم الطلب</span>
+                    <p className="text-white font-bold">#{order.id.slice(-8)}</p>
+                  </div>
+                  <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${st.color} bg-white/5`}>{st.label}</span>
+                </div>
+
+                {/* Progress steps */}
+                <div className="flex gap-1 mb-4">
+                  {[1, 2, 3, 4].map(s => (
+                    <div key={s} className={`flex-1 h-1.5 rounded-full ${st.step >= s ? "gradient-bg" : "bg-white/10"}`} />
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">
+                  <div>
+                    <span className="text-gray-500">العميل</span>
+                    <p className="text-white">{order.customerName}</p>
+                    <p className="text-gray-400">{order.customerPhone}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">المحافظة</span>
+                    <p className="text-white">{gov?.name || order.governorate}</p>
+                    <p className="text-gray-400">{order.shippingMethod === "express" ? "شحن سريع" : "شحن عادي"}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">الدفع</span>
+                    <p className="text-white">{order.paymentMethod === "fawry" ? "فوري" : "كاش"}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">الإجمالي</span>
+                    <p className="text-lg font-bold gradient-text">{formatPrice(order.total)}</p>
+                  </div>
+                </div>
+
+                <details className="text-sm">
+                  <summary className="text-purple-400 cursor-pointer hover:text-purple-300">المنتجات</summary>
+                  <div className="mt-2 space-y-1 text-gray-400">
+                    {items.map((item, i) => (
+                      <div key={i} className="flex justify-between">
+                        <span>{item.name} x{item.quantity}</span>
+                        <span>{formatPrice(item.price * item.quantity)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -3,14 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatPrice } from "@/lib/utils";
 
 interface Product {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  featured: boolean;
-  category?: { name: string } | null;
+  id: string; name: string; price: number; stock: number;
+  featured: boolean; slug: string; categoryName?: string;
 }
 
 export default function AdminProductsPage() {
@@ -22,57 +19,49 @@ export default function AdminProductsPage() {
   }, []);
 
   const deleteProduct = async (id: string) => {
-    if (!confirm("متأكد من حذف هذا المنتج؟")) return;
+    if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
     await fetch(`/api/products/${id}`, { method: "DELETE" });
-    setProducts(products.filter(p => p.id !== id));
-    router.refresh();
+    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">المنتجات</h1>
-        <Link href="/admin/products/new" className="bg-[#febd69] text-black px-4 py-2 rounded-lg font-bold hover:bg-[#f3a847]">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-white">المنتجات</h1>
+        <Link href="/admin/products/new" className="gradient-bg text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-all">
           + إضافة منتج
         </Link>
       </div>
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <table className="w-full text-right">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="p-3 text-sm font-medium">الاسم</th>
-              <th className="p-3 text-sm font-medium">السعر</th>
-              <th className="p-3 text-sm font-medium">المخزون</th>
-              <th className="p-3 text-sm font-medium">القسم</th>
-              <th className="p-3 text-sm font-medium">مميز</th>
-              <th className="p-3 text-sm font-medium"></th>
+      <div className="glass rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-gray-400 border-b border-white/10">
+              <th className="text-right py-3 px-4">المنتج</th>
+              <th className="text-right py-3 px-4">السعر</th>
+              <th className="text-right py-3 px-4">المخزون</th>
+              <th className="text-right py-3 px-4">مميز</th>
+              <th className="text-right py-3 px-4"></th>
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => (
-              <tr key={p.id} className="border-t">
-                <td className="p-3">{p.name}</td>
-                <td className="p-3">{p.price.toFixed(2)} EGP</td>
-                <td className="p-3">{p.stock}</td>
-                <td className="p-3 text-sm text-gray-500">{p.category?.name || "-"}</td>
-                <td className="p-3">{p.featured ? "⭐" : "-"}</td>
-                <td className="p-3">
-                  <Link href={`/admin/products/${p.id}/edit`} className="text-blue-600 hover:underline text-sm ml-3">
-                    تعديل
-                  </Link>
-                  <button onClick={() => deleteProduct(p.id)} className="text-red-600 hover:underline text-sm">
-                    حذف
-                  </button>
+            {products.map(p => (
+              <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <td className="py-3 px-4 text-white">{p.name}</td>
+                <td className="py-3 px-4 gradient-text font-bold">{formatPrice(p.price)}</td>
+                <td className="py-3 px-4">
+                  <span className={p.stock > 0 ? "text-green-400" : "text-red-400"}>{p.stock}</span>
+                </td>
+                <td className="py-3 px-4">{p.featured ? <span className="text-yellow-400">✓</span> : "—"}</td>
+                <td className="py-3 px-4">
+                  <div className="flex gap-2">
+                    <button onClick={() => router.push(`/admin/products/${p.id}/edit`)}
+                      className="text-purple-400 hover:text-purple-300 transition-colors text-xs font-bold">تعديل</button>
+                    <button onClick={() => deleteProduct(p.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors text-xs font-bold">حذف</button>
+                  </div>
                 </td>
               </tr>
             ))}
-            {products.length === 0 && (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-gray-500">
-                  لا توجد منتجات. <Link href="/admin/products/new" className="text-blue-600">أضف أول منتج</Link>
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>

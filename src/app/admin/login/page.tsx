@@ -31,27 +31,22 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-center mb-6">لوحة التحكم</h1>
-        {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a0a1a, #1a1a3e)" }}>
+      <form onSubmit={handleLogin} className="glass rounded-2xl p-8 w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-center mb-2">
+          <span className="gradient-text">Nexora</span>
+          <span className="text-white"> Admin</span>
+        </h1>
+        <p className="text-gray-500 text-sm text-center mb-6">تسجيل الدخول إلى لوحة التحكم</p>
+        {error && <p className="text-red-400 text-sm mb-4 text-center bg-red-500/10 rounded-lg py-2">{error}</p>}
         <div className="space-y-4">
-          <input
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+          <input required value={username} onChange={e => setUsername(e.target.value)}
             placeholder="اسم المستخدم"
-            className="w-full border rounded-lg px-3 py-2"
-          />
-          <input
-            required
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
+          <input required type="password" value={password} onChange={e => setPassword(e.target.value)}
             placeholder="كلمة المرور"
-            className="w-full border rounded-lg px-3 py-2"
-          />
-          <button type="submit" className="w-full bg-[#131921] text-white py-2 rounded-lg font-bold hover:bg-[#232f3e]">
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
+          <button type="submit" className="w-full gradient-bg text-white py-3 rounded-xl font-bold hover:opacity-90 transition-all">
             دخول
           </button>
         </div>

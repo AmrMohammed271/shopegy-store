@@ -35,23 +35,20 @@ export default function ClientActions({ product }: { product: Product }) {
       <button
         onClick={addToCart}
         disabled={product.stock === 0}
-        className={`flex-1 py-3 rounded-lg font-bold text-lg transition-colors ${
+        className={`flex-1 py-3.5 rounded-xl font-bold text-lg transition-all ${
           product.stock === 0
-            ? "bg-gray-300 cursor-not-allowed"
+            ? "bg-gray-800 text-gray-500 cursor-not-allowed"
             : added
             ? "bg-green-500 text-white"
-            : "bg-[#febd69] hover:bg-[#f3a847]"
+            : "gradient-bg text-white hover:opacity-90"
         }`}
       >
         {product.stock === 0 ? "غير متوفر" : added ? "✓ تمت الإضافة" : "أضف إلى السلة"}
       </button>
       <button
-        onClick={() => {
-          addToCart();
-          router.push("/cart");
-        }}
+        onClick={() => { addToCart(); router.push("/cart"); }}
         disabled={product.stock === 0}
-        className="py-3 px-6 rounded-lg font-bold border-2 border-[#febd69] text-[#131921] hover:bg-[#febd69] transition-colors"
+        className="py-3.5 px-8 rounded-xl font-bold glass text-white hover:bg-white/10 transition-all"
       >
         اشتر الآن
       </button>
