@@ -15,11 +15,12 @@ async function ensurePgInit() {
   if (pgInitialized) return;
   const pool = await getPgPool();
   try {
-    await pool.query("SELECT 1 FROM categories LIMIT 1");
+    // Check if lowercase columns exist (new schema)
+    await pool.query("SELECT categoryid FROM products LIMIT 1");
     pgInitialized = true;
     return;
   } catch {
-    // tables don't exist — create them
+    // old schema or missing tables — recreate
   }
   // Drop old tables if they have wrong column casing, then recreate
   await pool.query("DROP TABLE IF EXISTS orders");
