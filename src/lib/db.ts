@@ -79,10 +79,16 @@ async function ensurePgInit() {
   pgInitialized = true;
 }
 
+// Convert ? to $1,$2,... for PostgreSQL
+function toPgSql(sql: string): string {
+  let i = 0;
+  return sql.replace(/\?/g, () => `$${++i}`);
+}
+
 async function pgQuery(sql: string, params: unknown[] = []): Promise<Row[]> {
   const pool = await getPgPool();
   await ensurePgInit();
-  const r = await pool.query(sql, params);
+  const r = await pool.query(toPgSql(sql), params);
   return r.rows;
 }
 
@@ -94,7 +100,7 @@ async function pgGet(sql: string, params: unknown[] = []): Promise<Row | null> {
 async function pgRun(sql: string, params: unknown[] = []): Promise<void> {
   const pool = await getPgPool();
   await ensurePgInit();
-  await pool.query(sql, params);
+  await pool.query(toPgSql(sql), params);
 }
 
 // ====== SQLite functions (local dev) — lazy imports ======
