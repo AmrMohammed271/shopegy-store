@@ -24,30 +24,29 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">لوحة المعلومات</h1>
+      <h1 className="text-xl font-bold text-[#0f1111] mb-6">لوحة المعلومات</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {[
-          { label: "إجمالي المنتجات", value: stats.products, icon: "📦", color: "from-purple-500 to-pink-500" },
-          { label: "إجمالي الطلبات", value: stats.orders, icon: "📋", color: "from-blue-500 to-cyan-500" },
-          { label: "الإيرادات", value: formatPrice(stats.revenue), icon: "💰", color: "from-green-500 to-emerald-500" },
+          { label: "إجمالي المنتجات", value: stats.products, color: "bg-[#fef4e4] text-[#c7511f]" },
+          { label: "إجمالي الطلبات", value: stats.orders, color: "bg-[#e8f4f8] text-[#007185]" },
+          { label: "الإيرادات", value: formatPrice(stats.revenue), color: "bg-[#e8f8f4] text-[#067d62]" },
         ].map((s, i) => (
-          <div key={i} className="glass rounded-xl p-6 card-hover">
-            <div className="text-3xl mb-2">{s.icon}</div>
-            <p className="text-2xl font-bold text-white">{s.value}</p>
-            <p className="text-gray-400 text-sm">{s.label}</p>
+          <div key={i} className={`${s.color} rounded-lg p-6 shadow-sm`}>
+            <p className="text-2xl font-bold">{s.value}</p>
+            <p className="text-sm opacity-75">{s.label}</p>
           </div>
         ))}
       </div>
 
-      <div className="glass rounded-xl p-6">
-        <h2 className="font-bold text-lg text-white mb-4">أحدث الطلبات</h2>
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h2 className="font-bold text-base text-[#0f1111] mb-4">أحدث الطلبات</h2>
         {recentOrders.length === 0 ? (
-          <p className="text-gray-500 text-sm">لا توجد طلبات بعد</p>
+          <p className="text-[#565959] text-sm">لا توجد طلبات بعد</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-400 border-b border-white/10">
+                <tr className="text-[#565959] border-b border-[#d5d9d9]">
                   <th className="text-right py-2 px-3">العميل</th>
                   <th className="text-right py-2 px-3">الحالة</th>
                   <th className="text-right py-2 px-3">الإجمالي</th>
@@ -56,13 +55,13 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {recentOrders.map(o => (
-                  <tr key={o.id} className="border-b border-white/5 hover:bg-white/5">
-                    <td className="py-3 px-3 text-white">{o.customerName}</td>
+                  <tr key={o.id} className="border-b border-[#eaeded] hover:bg-gray-50">
+                    <td className="py-3 px-3 text-[#0f1111]">{o.customerName}</td>
                     <td className="py-3 px-3">
-                      <span className="text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded-full text-xs">{o.status}</span>
+                      <span className="text-[#c7511f] bg-[#fef4e4] px-2 py-0.5 rounded-full text-xs">{o.status}</span>
                     </td>
-                    <td className="py-3 px-3 gradient-text font-bold">{formatPrice(o.total)}</td>
-                    <td className="py-3 px-3 text-gray-400">{new Date(o.createdAt).toLocaleDateString("ar-EG")}</td>
+                    <td className="py-3 px-3 font-bold">{formatPrice(o.total)}</td>
+                    <td className="py-3 px-3 text-[#565959]">{new Date(o.createdAt).toLocaleDateString("ar-EG")}</td>
                   </tr>
                 ))}
               </tbody>

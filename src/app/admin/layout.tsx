@@ -27,20 +27,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push("/admin/login");
   };
 
+  const navItems = [
+    { href: "/admin", label: "لوحة المعلومات" },
+    { href: "/admin/products", label: "المنتجات" },
+    { href: "/admin/orders", label: "الطلبات" },
+  ];
+
   return (
-    <div className="flex min-h-screen" style={{ background: "linear-gradient(135deg, #0a0a1a, #1a1a3e)" }}>
-      <aside className="w-56 glass p-4 shrink-0 border-l border-white/10">
-        <Link href="/admin" className="text-xl font-bold block mb-6">
-          <span className="gradient-text">Nexora</span>
-          <span className="text-white"> Admin</span>
+    <div className="flex min-h-screen bg-[#eaeded]">
+      <aside className="w-56 bg-[#232f3e] p-4 shrink-0 border-l border-white/10">
+        <Link href="/admin" className="text-xl font-bold block mb-6 text-white">
+          Nexora Admin
         </Link>
         <nav className="space-y-1">
-          <Link href="/admin" className="block px-3 py-2.5 rounded-xl hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-all">لوحة المعلومات</Link>
-          <Link href="/admin/products" className="block px-3 py-2.5 rounded-xl hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-all">المنتجات</Link>
-          <Link href="/admin/orders" className="block px-3 py-2.5 rounded-xl hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-all">الطلبات</Link>
+          {navItems.map(item => (
+            <Link key={item.href} href={item.href}
+              className={`block px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                pathname === item.href ? "bg-white/10 text-[#febd69]" : "text-gray-300 hover:bg-white/5 hover:text-white"
+              }`}>
+              {item.label}
+            </Link>
+          ))}
           <hr className="border-white/10 my-2" />
-          <Link href="/" className="block px-3 py-2.5 rounded-xl hover:bg-white/5 text-sm text-gray-500 hover:text-white transition-all">→ المتجر</Link>
-          <button onClick={logout} className="w-full text-right px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-sm text-red-400 transition-all">
+          <Link href="/" className="block px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-white/5 hover:text-white transition-colors">→ المتجر</Link>
+          <button onClick={logout} className="w-full text-right px-3 py-2.5 rounded-lg text-sm text-red-400 hover:bg-red-500/10 transition-colors">
             تسجيل خروج
           </button>
         </nav>

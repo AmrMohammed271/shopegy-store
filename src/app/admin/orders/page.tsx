@@ -30,53 +30,53 @@ export default function AdminOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">الطلبات</h1>
+      <h1 className="text-xl font-bold text-[#0f1111] mb-6">الطلبات</h1>
       {orders.length === 0 ? (
-        <p className="text-gray-500 glass rounded-xl p-6">لا توجد طلبات بعد</p>
+        <p className="text-[#565959] bg-white rounded-lg shadow-sm p-6">لا توجد طلبات بعد</p>
       ) : (
         <div className="space-y-4">
           {orders.map(order => {
             const gov = shippingData.find(g => g.id === order.governorate);
             const items: { name: string; quantity: number; price: number }[] = (() => { try { return JSON.parse(order.items); } catch { return []; } })();
             return (
-              <div key={order.id} className="glass rounded-xl p-6">
+              <div key={order.id} className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div>
-                    <span className="text-gray-500 text-xs">#{order.id.slice(-8)}</span>
-                    <p className="text-white font-bold">{order.customerName}</p>
-                    <p className="text-gray-400 text-sm">{order.customerPhone} · {order.customerEmail}</p>
+                    <span className="text-[#565959] text-xs">#{order.id.slice(-8)}</span>
+                    <p className="text-[#0f1111] font-bold">{order.customerName}</p>
+                    <p className="text-[#565959] text-sm">{order.customerPhone} · {order.customerEmail}</p>
                   </div>
                   <select value={order.status} onChange={e => updateStatus(order.id, e.target.value)}
-                    className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                    className="border border-[#d5d9d9] rounded-lg px-3 py-2 text-sm text-[#0f1111] focus:outline-none focus:border-[#007185]">
                     {statusList.map(s => (
-                      <option key={s} value={s} className="bg-gray-900">{s}</option>
+                      <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">
                   <div>
-                    <span className="text-gray-500">العنوان</span>
-                    <p className="text-white">{gov?.name || order.governorate}</p>
-                    <p className="text-gray-400">{order.customerAddress}</p>
+                    <span className="text-[#565959]">العنوان</span>
+                    <p className="text-[#0f1111]">{gov?.name || order.governorate}</p>
+                    <p className="text-[#565959]">{order.customerAddress}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">الشحن</span>
-                    <p className="text-white">{order.shippingMethod === "express" ? "سريع" : "عادي"}</p>
-                    <p className="text-gray-400">{formatPrice(order.shippingCost)}</p>
+                    <span className="text-[#565959]">الشحن</span>
+                    <p className="text-[#0f1111]">{order.shippingMethod === "express" ? "سريع" : "عادي"}</p>
+                    <p className="text-[#565959]">{formatPrice(order.shippingCost)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">الدفع</span>
-                    <p className="text-white">{order.paymentMethod === "fawry" ? "فوري" : "كاش"}</p>
-                    <p className="text-gray-400">{formatPrice(order.total)}</p>
+                    <span className="text-[#565959]">الدفع</span>
+                    <p className="text-[#0f1111]">{order.paymentMethod === "fawry" ? "فوري" : "كاش"}</p>
+                    <p className="text-[#565959]">{formatPrice(order.total)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">التاريخ</span>
-                    <p className="text-white">{new Date(order.createdAt).toLocaleDateString("ar-EG")}</p>
+                    <span className="text-[#565959]">التاريخ</span>
+                    <p className="text-[#0f1111]">{new Date(order.createdAt).toLocaleDateString("ar-EG")}</p>
                   </div>
                 </div>
                 <details className="text-sm">
-                  <summary className="text-purple-400 cursor-pointer">المنتجات ({items.length})</summary>
-                  <div className="mt-2 space-y-1 text-gray-400">
+                  <summary className="text-[#007185] cursor-pointer hover:text-[#c7511f]">المنتجات ({items.length})</summary>
+                  <div className="mt-2 space-y-1 text-[#565959]">
                     {items.map((item, i) => (
                       <div key={i} className="flex justify-between">
                         <span>{item.name} x{item.quantity}</span>

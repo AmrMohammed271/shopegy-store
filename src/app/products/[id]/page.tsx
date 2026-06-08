@@ -29,46 +29,67 @@ export default async function ProductDetailPage({
   const images = parseImages(formatted.images);
   const related = product.categoryId ? await getRelatedProducts(product.categoryId as string, product.id as string) : [];
 
+  const renderStars = (rating: number) => {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.5;
+    return (
+      <span className="text-[#ffa41c] text-lg" dir="ltr">
+        {"★".repeat(full)}{half ? "★" : ""}{"☆".repeat(5 - full - (half ? 1 : 0))}
+      </span>
+    );
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <nav className="text-sm text-gray-500 mb-6 glass inline-block px-4 py-2 rounded-xl">
-        <a href="/" className="hover:text-purple-400 transition-colors">الرئيسية</a>
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Breadcrumb */}
+      <nav className="text-sm text-[#565959] mb-4">
+        <a href="/" className="hover:text-[#c7511f] transition-colors">الرئيسية</a>
         {formatted.category && (
-          <><span className="mx-2">/</span><a href={`/products?cat=${formatted.category.slug}`} className="hover:text-purple-400 transition-colors">{formatted.category.name}</a></>)}
-        <span className="mx-2">/</span>
-        <span className="text-purple-400">{formatted.name}</span>
+          <><span className="mx-1">/</span><a href={`/products?cat=${formatted.category.slug}`} className="hover:text-[#c7511f] transition-colors">{formatted.category.name}</a></>)}
+        <span className="mx-1">/</span>
+        <span className="text-[#0f1111]">{formatted.name}</span>
       </nav>
 
-      <div className="grid md:grid-cols-2 gap-8 glass rounded-2xl p-6 md:p-8">
-        <div className="aspect-square bg-white/5 rounded-xl overflow-hidden">
-          <img src={images[0] || "/placeholder.svg"} alt={formatted.name} className="w-full h-full object-contain p-8 hover:scale-110 transition-transform duration-500" />
-        </div>
-        <div className="flex flex-col justify-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">{formatted.name}</h1>
-          <div className="flex items-center gap-1 mb-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <span key={i} className={`text-xl ${i < Math.round(formatted.rating) ? "text-yellow-400" : "text-gray-600"}`}>★</span>
-            ))}
-            <span className="text-sm text-gray-500 mr-2">({formatted.rating})</span>
+      {/* Product */}
+      <div className="bg-white rounded-lg shadow-sm p-4 md:p-8">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-10">
+          <div className="aspect-square bg-white rounded-lg overflow-hidden border border-[#d5d9d9] flex items-center justify-center p-6">
+            <img src={images[0] || "/placeholder.svg"} alt={formatted.name} className="w-full h-full object-contain hover:scale-105 transition-transform duration-300" />
           </div>
-          <p className="text-4xl font-black gradient-text mb-6">{formatPrice(formatted.price)}</p>
-          <p className="text-gray-300 mb-6 leading-relaxed">{formatted.description}</p>
-          <p className={`text-sm mb-6 ${formatted.stock > 0 ? "text-green-400" : "text-red-400"}`}>
-            {formatted.stock > 0 ? `✅ متوفر - الكمية: ${formatted.stock}` : "❌ غير متوفر حالياً"}
-          </p>
-          <ClientActions product={formatted} />
+          <div className="flex flex-col">
+            <h1 className="text-xl md:text-2xl font-bold text-[#0f1111] mb-2">{formatted.name}</h1>
+            <div className="flex items-center gap-2 mb-3">
+              {renderStars(formatted.rating)}
+              <span className="text-sm text-[#007185]">{formatted.rating}</span>
+            </div>
+            <hr className="border-[#d5d9d9] mb-3" />
+            <p className="text-3xl font-bold text-[#0f1111] mb-3">
+              <span className="text-sm align-super">ج.م</span> {formatPrice(formatted.price).replace("ج.م", "").trim()}
+            </p>
+            {formatted.stock > 20 && (
+              <p className="text-sm text-[#067d62] mb-2">✓ التوصيل المجاني متوفر</p>
+            )}
+            <p className={`text-sm mb-4 ${formatted.stock > 0 ? "text-[#067d62]" : "text-[#c7511f]"}`}>
+              {formatted.stock > 0 ? `متوفر - الكمية: ${formatted.stock}` : "غير متوفر حالياً"}
+            </p>
+            <p className="text-sm text-[#0f1111] mb-6 leading-relaxed">{formatted.description}</p>
+            <ClientActions product={formatted} />
+          </div>
         </div>
       </div>
 
+      {/* Related */}
       {related.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-6">منتجات مشابهة</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <section className="mt-8">
+          <h2 className="text-lg md:text-xl font-bold text-[#0f1111] mb-4">منتجات مشابهة</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {related.map((r: any) => (
-              <a key={r.id} href={`/products/${r.slug}`} className="glass rounded-xl p-4 card-hover">
-                <img src={parseImages(r.images)[0] || "/placeholder.svg"} alt={r.name} className="w-full h-36 object-contain mb-3" />
-                <p className="text-sm font-medium text-white line-clamp-2 mb-2">{r.name}</p>
-                <p className="text-lg font-bold gradient-text">{formatPrice(Number(r.price))}</p>
+              <a key={r.id} href={`/products/${r.slug}`} className="bg-white rounded-lg shadow-sm p-3 hover:shadow-md transition-shadow">
+                <img src={parseImages(r.images)[0] || "/placeholder.svg"} alt={r.name} className="w-full h-32 object-contain mb-2" />
+                <p className="text-sm text-[#0f1111] line-clamp-2 mb-1">{r.name}</p>
+                <p className="text-lg font-bold text-[#0f1111]">
+                  <span className="text-xs align-super">ج.م</span> {formatPrice(Number(r.price)).replace("ج.م", "").trim()}
+                </p>
               </a>
             ))}
           </div>

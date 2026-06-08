@@ -27,15 +27,15 @@ export default function AdminProductsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">المنتجات</h1>
-        <Link href="/admin/products/new" className="gradient-bg text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-all">
+        <h1 className="text-xl font-bold text-[#0f1111]">المنتجات</h1>
+        <Link href="/admin/products/new" className="bg-[#febd69] hover:bg-[#f3a847] text-[#0f1111] px-4 py-2 rounded-lg font-bold text-sm transition-colors">
           + إضافة منتج
         </Link>
       </div>
-      <div className="glass rounded-xl overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-gray-400 border-b border-white/10">
+            <tr className="text-[#565959] border-b border-[#d5d9d9]">
               <th className="text-right py-3 px-4">المنتج</th>
               <th className="text-right py-3 px-4">السعر</th>
               <th className="text-right py-3 px-4">المخزون</th>
@@ -45,19 +45,19 @@ export default function AdminProductsPage() {
           </thead>
           <tbody>
             {products.map(p => (
-              <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="py-3 px-4 text-white">{p.name}</td>
-                <td className="py-3 px-4 gradient-text font-bold">{formatPrice(p.price)}</td>
+              <tr key={p.id} className="border-b border-[#eaeded] hover:bg-gray-50 transition-colors">
+                <td className="py-3 px-4 text-[#0f1111]">{p.name}</td>
+                <td className="py-3 px-4 font-bold">{formatPrice(p.price)}</td>
                 <td className="py-3 px-4">
-                  <span className={p.stock > 0 ? "text-green-400" : "text-red-400"}>{p.stock}</span>
+                  <span className={p.stock > 0 ? "text-[#067d62]" : "text-red-600"}>{p.stock}</span>
                 </td>
-                <td className="py-3 px-4">{p.featured ? <span className="text-yellow-400">✓</span> : "—"}</td>
+                <td className="py-3 px-4">{p.featured ? <span className="text-[#c7511f]">✓</span> : "—"}</td>
                 <td className="py-3 px-4">
                   <div className="flex gap-2">
                     <button onClick={() => router.push(`/admin/products/${p.id}/edit`)}
-                      className="text-purple-400 hover:text-purple-300 transition-colors text-xs font-bold">تعديل</button>
+                      className="text-[#007185] hover:text-[#c7511f] transition-colors text-xs font-bold">تعديل</button>
                     <button onClick={() => deleteProduct(p.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors text-xs font-bold">حذف</button>
+                      className="text-red-600 hover:text-red-800 transition-colors text-xs font-bold">حذف</button>
                   </div>
                 </td>
               </tr>
